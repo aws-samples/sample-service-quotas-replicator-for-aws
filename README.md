@@ -2,7 +2,7 @@
 
 This repository contains sample code for the AWS Quota Replicator (AQR) tool, which demonstrates how to build a solution for comparing and managing service quotas across AWS accounts and regions.
 
-**Note: This is sample code intended for educational and demonstration purposes. AQR is proudly built with the powerful assistance of [Amazon Q Developer!](https://aws.amazon.com/q/developer/)**
+**Note: AQR is proudly built with the powerful assistance of [Amazon Q Developer!](https://aws.amazon.com/q/developer/)**
 
 ## Overview
 
