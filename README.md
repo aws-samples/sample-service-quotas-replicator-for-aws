@@ -103,6 +103,37 @@ This diagram illustrates the architecture of the AWS Quota Replicator Tool, show
    ```
 3. Ensure AWS credentials are configured in `~/.aws/credentials` or `~/.aws/config`
 
+## Running in a Virtual Environment
+
+Using a virtual environment is recommended to isolate dependencies and ensure consistent behavior across different systems:
+
+1. **Create a virtual environment**:
+   ```bash
+   # Using venv (Python 3.3+)
+   python -m venv venv
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   
+   # On Windows
+   venv\Scripts\activate
+   ```
+
+2. **Install dependencies within the virtual environment**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the application**:
+   ```bash
+   streamlit run app.py
+   ```
+
+4. **Deactivate the virtual environment when done**:
+   ```bash
+   deactivate
+   ```
+
 ## Security Considerations
 
 ### AWS Permissions
