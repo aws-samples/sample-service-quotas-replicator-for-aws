@@ -1,0 +1,10 @@
+{
+    "EC2 - Running instances": {
+        "Value": 10,
+        "DefaultValue": 5,
+        "Unit": "None",
+        "Adjustable": true,
+        "ServiceCode": "ec2",
+        "QuotaCode": "L-1234"
+    }
+}

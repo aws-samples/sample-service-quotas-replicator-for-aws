@@ -1,0 +1,8 @@
+[
+    {
+        "RequestId": "req-1234",
+        "Service": "EC2",
+        "Quota Name": "Running instances",
+        "Request Status": "APPROVED"
+    }
+]
