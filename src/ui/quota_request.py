@@ -265,7 +265,8 @@ def check_quota_request_status(dest_profile, dest_region, request_id):
                 try:
                     with open(selected_file, "w") as f:
                         json.dump(updated_status, f)
-                    st.success("For all the Not Approved or Denied Quotas submit a [support ticket](https://support.console.aws.amazon.com/)")
+                    # st.success("For all the Not Approved or Denied Quotas submit a [support ticket](https://support.console.aws.amazon.com/)")
+                    st.success("For all the Not Approved or Denied Quotas, please contact AWS through your TAMs for further support")
                     st.success(f"Status information updated and saved to {selected_file.name}")
                 except Exception as e:
                     st.warning(f"Could not save updated status: {str(e)}")
