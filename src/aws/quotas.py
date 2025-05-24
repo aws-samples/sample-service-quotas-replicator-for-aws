@@ -113,57 +113,67 @@ def fetch_quotas_in_parallel(source_profile: str, source_region: str, dest_profi
     
     source_quotas = {}
     dest_quotas = {}
-    source_cached = False
-    dest_cached = False
     
-    # Check if cache files exist
+    # Track whether we need to fetch from AWS
+    fetch_source = True
+    fetch_dest = True
+    
+    # Check if cache files exist and try to load them
     if enable_cache:
-        source_cached = source_cache_file.exists()
-        dest_cached = dest_cache_file.exists()
-    
-    # Use ThreadPoolExecutor to fetch quotas in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        # Define tasks based on cache availability
-        tasks = {}
-        
-        if source_cached:
+        if source_cache_file.exists():
             source_placeholder.info(f"Loading cached data for {source_profile} in {source_region}...")
-            source_quotas = load_from_cache(source_cache_file)
-            if source_quotas is None:  # Cache read failed
+            cached_source_quotas = load_from_cache(source_cache_file)
+            if cached_source_quotas is not None:
+                source_quotas = cached_source_quotas
+                fetch_source = False
+                source_placeholder.success(f"Loaded cached data for {source_profile} in {source_region}")
+            else:
                 source_placeholder.warning(f"Cache read failed for {source_profile}, fetching from AWS...")
-                tasks[executor.submit(fetch_quotas_from_aws, source_profile, source_region)] = "source"
-        else:
-            tasks[executor.submit(fetch_quotas_from_aws, source_profile, source_region)] = "source"
-            
-        if dest_cached:
-            dest_placeholder.info(f"Loading cached data for {dest_profile} in {dest_region}...")
-            dest_quotas = load_from_cache(dest_cache_file)
-            if dest_quotas is None:  # Cache read failed
-                dest_placeholder.warning(f"Cache read failed for {dest_profile}, fetching from AWS...")
-                tasks[executor.submit(fetch_quotas_from_aws, dest_profile, dest_region)] = "dest"
-        else:
-            tasks[executor.submit(fetch_quotas_from_aws, dest_profile, dest_region)] = "dest"
         
-        # Process completed tasks
-        for future in concurrent.futures.as_completed(tasks):
-            task_type = tasks[future]
-            try:
-                result = future.result()
-                if task_type == "source":
-                    source_quotas = result
-                    source_placeholder.success(f"Completed fetching data for {source_profile} in {source_region}")
-                    if not source_cached and source_quotas:
-                        save_to_cache(source_quotas, source_cache_file)
-                else:  # dest
-                    dest_quotas = result
-                    dest_placeholder.success(f"Completed fetching data for {dest_profile} in {dest_region}")
-                    if not dest_cached and dest_quotas:
-                        save_to_cache(dest_quotas, dest_cache_file)
-            except Exception as e:
-                if task_type == "source":
-                    source_placeholder.error(f"Error fetching quotas for {source_profile}: {str(e)}")
-                else:  # dest
-                    dest_placeholder.error(f"Error fetching quotas for {dest_profile}: {str(e)}")
+        if dest_cache_file.exists():
+            dest_placeholder.info(f"Loading cached data for {dest_profile} in {dest_region}...")
+            cached_dest_quotas = load_from_cache(dest_cache_file)
+            if cached_dest_quotas is not None:
+                dest_quotas = cached_dest_quotas
+                fetch_dest = False
+                dest_placeholder.success(f"Loaded cached data for {dest_profile} in {dest_region}")
+            else:
+                dest_placeholder.warning(f"Cache read failed for {dest_profile}, fetching from AWS...")
+    
+    # Use ThreadPoolExecutor to fetch quotas in parallel if needed
+    if fetch_source or fetch_dest:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            # Define tasks based on what needs to be fetched
+            tasks = {}
+            
+            if fetch_source:
+                tasks[executor.submit(fetch_quotas_from_aws, source_profile, source_region)] = "source"
+                
+            if fetch_dest:
+                tasks[executor.submit(fetch_quotas_from_aws, dest_profile, dest_region)] = "dest"
+            
+            # Process completed tasks
+            for future in concurrent.futures.as_completed(tasks):
+                task_type = tasks[future]
+                try:
+                    result = future.result()
+                    if task_type == "source":
+                        source_quotas = result
+                        source_placeholder.success(f"Completed fetching data for {source_profile} in {source_region}")
+                        # Save to cache if we have data
+                        if source_quotas and enable_cache:
+                            save_to_cache(source_quotas, source_cache_file)
+                    else:  # dest
+                        dest_quotas = result
+                        dest_placeholder.success(f"Completed fetching data for {dest_profile} in {dest_region}")
+                        # Save to cache if we have data
+                        if dest_quotas and enable_cache:
+                            save_to_cache(dest_quotas, dest_cache_file)
+                except Exception as e:
+                    if task_type == "source":
+                        source_placeholder.error(f"Error fetching quotas for {source_profile}: {str(e)}")
+                    else:  # dest
+                        dest_placeholder.error(f"Error fetching quotas for {dest_profile}: {str(e)}")
     
     return source_quotas, dest_quotas
 

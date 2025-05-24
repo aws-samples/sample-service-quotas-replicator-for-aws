@@ -60,7 +60,7 @@ def process_quota_increase_requests(dest_profile, dest_region, selected_quotas):
                             retry_count += 1
                             if retry_count < max_retries:
                                 delay = base_delay * (2 ** retry_count)
-                                st.warning(f"Retrying in {delay} seconds due to rate limiting")
+                                logger.debug(f"Retrying in {delay} seconds due to rate limiting")
                                 time.sleep(delay)
                             else:
                                 st.error(f"Failed to request increase for {row['Service']} - {row['Quota Name']}: Rate limit exceeded")
